@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>脳トレ管理アプリ</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main id="app">
+    <section id="screen-login" class="screen">
+      <h1>脳トレ管理アプリ</h1>
+      <form id="login-form">
+        <input type="email" id="login-email" placeholder="メールアドレス" required />
+        <input type="password" id="login-password" placeholder="パスワード" required />
+        <button type="submit">ログイン</button>
+      </form>
+      <p id="login-error" class="error" hidden></p>
+    </section>
+
+    <section id="screen-today" class="screen" hidden>
+      <header>
+        <h2>今日の記録</h2>
+        <input type="date" id="today-date-picker" />
+      </header>
+      <ul id="today-activity-list"></ul>
+    </section>
+
+    <section id="screen-stats" class="screen" hidden>
+      <h2>振り返り</h2>
+      <div class="tabs">
+        <button type="button" data-period="week" class="tab active">週</button>
+        <button type="button" data-period="month" class="tab">月</button>
+        <button type="button" data-period="year" class="tab">年</button>
+      </div>
+      <p id="stats-overall"></p>
+      <p id="stats-streak"></p>
+      <div id="stats-chart"></div>
+    </section>
+
+    <section id="screen-manage" class="screen" hidden>
+      <h2>項目管理</h2>
+      <ul id="manage-activity-list"></ul>
+      <form id="add-activity-form">
+        <input type="text" id="add-activity-name" placeholder="新しい項目名" required />
+        <input type="text" id="add-activity-icon" placeholder="絵文字" maxlength="2" />
+        <button type="submit">追加</button>
+      </form>
+    </section>
+
+    <nav id="main-nav" hidden>
+      <button type="button" data-screen="today">今日</button>
+      <button type="button" data-screen="stats">振り返り</button>
+      <button type="button" data-screen="manage">項目管理</button>
+      <button type="button" id="logout-button">ログアウト</button>
+    </nav>
+  </main>
+</body>
+</html>
