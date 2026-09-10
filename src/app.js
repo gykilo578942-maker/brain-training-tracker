@@ -70,13 +70,23 @@ async function renderTodayScreen() {
   for (const activity of activitiesCache.filter((a) => a.active)) {
     const entry = log.entries[activity.id] || { done: false, memo: "" };
     const item = document.createElement("li");
-    item.innerHTML = `
-      <label>
-        <input type="checkbox" data-activity-id="${activity.id}" ${entry.done ? "checked" : ""} />
-        ${activity.icon} ${activity.name}
-      </label>
-      <input type="text" data-memo-id="${activity.id}" placeholder="一言メモ" value="${entry.memo}" />
-    `;
+
+    const label = document.createElement("label");
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.dataset.activityId = activity.id;
+    checkbox.checked = entry.done;
+    label.appendChild(checkbox);
+    label.appendChild(document.createTextNode(` ${activity.icon} ${activity.name}`));
+
+    const memoInput = document.createElement("input");
+    memoInput.type = "text";
+    memoInput.dataset.memoId = activity.id;
+    memoInput.placeholder = "一言メモ";
+    memoInput.value = entry.memo;
+
+    item.appendChild(label);
+    item.appendChild(memoInput);
     listEl.appendChild(item);
   }
 
