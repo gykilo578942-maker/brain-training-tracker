@@ -848,7 +848,7 @@ git commit -m "Wire Firebase auth, login/logout flow, and service worker"
 
 **Interfaces:**
 - Consumes: `db` from `src/firebase-config.js` (Task 5).
-- Produces (this task): `seedDefaultActivitiesIfEmpty(uid): Promise<void>`, `getActivities(uid): Promise<Array<{id, name, icon, color, order, active}>>`, `addActivity(uid, {name, icon, color, order}): Promise<string>`, `updateActivity(uid, activityId, patch): Promise<void>`, `reorderActivities(uid, orderedIds): Promise<void>`, `getLog(uid, dateStr): Promise<{entries: object}>`, `setEntry(uid, dateStr, activityId, {done, memo}): Promise<void>`. `getActivities`/`addActivity`/`updateActivity`/`reorderActivities` are also consumed by the Manage screen in Task 8 (archiving reuses `updateActivity` with `{active: false}` — no separate helper).
+- Produces (this task): `seedDefaultActivitiesIfEmpty(uid): Promise<void>`, `getActivities(uid): Promise<Array<{id, name, icon, color, order, active}>>`, `addActivity(uid, {name, icon, color, order}): Promise<string>`, `updateActivity(uid, activityId, patch): Promise<void>`, `reorderActivities(uid, orderedIds): Promise<void>`, `getLog(uid, dateStr): Promise<{entries: object}>`, `setEntry(uid, dateStr, activityId, {done, memo}): Promise<void>`, and `getLogsInRange(uid, startDateStr, endDateStr): Promise<Map<string, {entries: object}>>` (this last one is not used by Task 6's own UI code, but is consumed by the Stats screen in Task 7 — implement it in this task's `src/db.js` anyway, per the code in Step 1). `getActivities`/`addActivity`/`updateActivity`/`reorderActivities` are also consumed by the Manage screen in Task 8 (archiving reuses `updateActivity` with `{active: false}` — no separate helper).
 
 - [ ] **Step 1: Create `src/db.js`**
 
@@ -1010,7 +1010,7 @@ async function renderTodayScreen() {
 mainNav.querySelector('[data-screen="today"]').addEventListener("click", renderTodayScreen);
 ```
 
-Also remove the earlier, now-duplicate `mainNav.querySelectorAll("button[data-screen]")` click handler's generic loop is still needed for `stats`/`manage` — leave that loop in place; this new listener is additive and only re-renders Today's data when its nav button is clicked (the generic loop still handles showing/hiding the screen).
+Do not remove the existing `mainNav.querySelectorAll("button[data-screen]")` click handler from Task 5 — it is still needed for `stats`/`manage`. Leave that loop in place; this new listener is additive and only re-renders Today's data when its nav button is clicked (the generic loop still handles showing/hiding the screen).
 
 - [ ] **Step 5: Manual verification**
 
