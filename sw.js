@@ -7,6 +7,7 @@ const APP_SHELL = [
   "./src/app.js",
   "./src/firebase-config.js",
   "./src/auth.js",
+  "./src/db.js",
   "./src/date-utils.js",
   "./src/stats.js",
   "./icons/icon-192.png",
