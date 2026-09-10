@@ -1,6 +1,7 @@
 import { login, logout, onAuthChange } from "./auth.js";
-import { seedDefaultActivitiesIfEmpty, getActivities, getLog, setEntry } from "./db.js";
-import { formatDate } from "./date-utils.js";
+import { seedDefaultActivitiesIfEmpty, getActivities, getLog, setEntry, getLogsInRange } from "./db.js";
+import { formatDate, getRangeDates, calcStreak } from "./date-utils.js";
+import { computePeriodStats, getDoneDates } from "./stats.js";
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
@@ -105,3 +106,56 @@ async function renderTodayScreen() {
 }
 
 mainNav.querySelector('[data-screen="today"]').addEventListener("click", renderTodayScreen);
+
+document.querySelectorAll(".tabs .tab").forEach((tabButton) => {
+  tabButton.addEventListener("click", async () => {
+    document.querySelectorAll(".tabs .tab").forEach((b) => b.classList.remove("active"));
+    tabButton.classList.add("active");
+    await renderStatsScreen(tabButton.dataset.period);
+  });
+});
+
+async function renderStatsScreen(period) {
+  const dates = getRangeDates(period);
+  const logs = await getLogsInRange(currentUser.uid, dates[0], dates[dates.length - 1]);
+  const activeActivities = activitiesCache.filter((a) => a.active);
+  const activeIds = activeActivities.map((a) => a.id);
+  const { perActivity, overall } = computePeriodStats(dates, logs, activeIds);
+
+  const allLogs = await getLogsInRange(currentUser.uid, "0000-00-00", formatDate(new Date()));
+  const { current, longest } = calcStreak(getDoneDates(allLogs));
+
+  document.getElementById("stats-overall").textContent = `全体の実施率: ${Math.round(overall * 100)}%`;
+  document.getElementById("stats-streak").textContent = `現在の継続日数: ${current}日 / 最長: ${longest}日`;
+
+  const chartEl = document.getElementById("stats-chart");
+  chartEl.innerHTML = "";
+  for (const activity of activeActivities) {
+    const stat = perActivity[activity.id] || { rate: 0, done: 0, total: 0 };
+    const row = document.createElement("div");
+    row.className = "chart-row";
+
+    const label = document.createElement("span");
+    label.className = "chart-label";
+    label.textContent = `${activity.icon} ${activity.name}`;
+
+    const track = document.createElement("div");
+    track.className = "chart-bar-track";
+    const fill = document.createElement("div");
+    fill.className = "chart-bar-fill";
+    fill.style.width = `${Math.round(stat.rate * 100)}%`;
+    fill.style.background = activity.color;
+    track.appendChild(fill);
+
+    const value = document.createElement("span");
+    value.className = "chart-value";
+    value.textContent = `${stat.done}/${stat.total}`;
+
+    row.appendChild(label);
+    row.appendChild(track);
+    row.appendChild(value);
+    chartEl.appendChild(row);
+  }
+}
+
+mainNav.querySelector('[data-screen="stats"]').addEventListener("click", () => renderStatsScreen("week"));
