@@ -59,10 +59,7 @@ export async function getLog(uid, dateStr) {
 
 export async function setEntry(uid, dateStr, activityId, { done, memo }) {
   const ref = logDocRef(uid, dateStr);
-  const snap = await getDoc(ref);
-  const entries = snap.exists() ? snap.data().entries || {} : {};
-  entries[activityId] = { done, memo: memo || "" };
-  await setDoc(ref, { entries, updatedAt: serverTimestamp() }, { merge: true });
+  await setDoc(ref, { entries: { [activityId]: { done, memo: memo || "" } }, updatedAt: serverTimestamp() }, { merge: true });
 }
 
 export async function getLogsInRange(uid, startDateStr, endDateStr) {
