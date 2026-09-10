@@ -12,6 +12,9 @@ const APP_SHELL = [
   "./src/stats.js",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
+  "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js",
+  "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js",
+  "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js",
 ];
 
 self.addEventListener("install", (event) => {
@@ -29,8 +32,10 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
-  if (url.origin !== self.location.origin) {
-    return; // let Firebase/Google API requests pass through uncached
+  if (url.origin !== self.location.origin && url.hostname !== "www.gstatic.com") {
+    // let Firebase/Google API calls (identitytoolkit.googleapis.com, firestore.googleapis.com, etc.)
+    // pass through uncached; gstatic-hosted SDK modules are cacheable and handled below
+    return;
   }
   event.respondWith(
     fetch(event.request)
