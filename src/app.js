@@ -28,8 +28,12 @@ onAuthChange(async (user) => {
   currentUser = user;
   if (user) {
     mainNav.hidden = false;
-    await seedDefaultActivitiesIfEmpty(user.uid);
-    activitiesCache = await getActivities(user.uid);
+    try {
+      await seedDefaultActivitiesIfEmpty(user.uid);
+      activitiesCache = await getActivities(user.uid);
+    } catch (err) {
+      console.error("failed to load activities", err);
+    }
     showScreen("today");
     await renderTodayScreen();
   } else {
@@ -47,6 +51,7 @@ document.getElementById("login-form").addEventListener("submit", async (event) =
   try {
     await login(email, password);
   } catch (err) {
+    console.error("login failed", err);
     errorEl.textContent = "ログインに失敗しました。メールアドレスとパスワードを確認してください。";
     errorEl.hidden = false;
   }
@@ -94,7 +99,11 @@ async function renderTodayScreen() {
   async function saveEntry(activityId) {
     const checkbox = listEl.querySelector(`input[data-activity-id="${activityId}"]`);
     const memoInput = listEl.querySelector(`input[data-memo-id="${activityId}"]`);
-    await setEntry(currentUser.uid, dateStr, activityId, { done: checkbox.checked, memo: memoInput.value });
+    try {
+      await setEntry(currentUser.uid, dateStr, activityId, { done: checkbox.checked, memo: memoInput.value });
+    } catch (err) {
+      console.error("failed to save entry", err);
+    }
   }
 
   listEl.querySelectorAll("input[type=checkbox]").forEach((checkbox) => {
@@ -158,7 +167,9 @@ async function renderStatsScreen(period) {
   }
 }
 
-mainNav.querySelector('[data-screen="stats"]').addEventListener("click", () => renderStatsScreen("week"));
+mainNav.querySelector('[data-screen="stats"]').addEventListener("click", () => {
+  document.querySelector(".tabs .tab.active").click();
+});
 
 function renderManageScreen() {
   const listEl = document.getElementById("manage-activity-list");
@@ -200,17 +211,21 @@ function renderManageScreen() {
     button.addEventListener("click", async () => {
       const id = button.dataset.id;
       const index = activitiesCache.findIndex((a) => a.id === id);
-      if (button.dataset.action === "toggle") {
-        await updateActivity(currentUser.uid, id, { active: !activitiesCache[index].active });
-      } else if (button.dataset.action === "up" && index > 0) {
-        [activitiesCache[index - 1], activitiesCache[index]] = [activitiesCache[index], activitiesCache[index - 1]];
-        await reorderActivities(currentUser.uid, activitiesCache.map((a) => a.id));
-      } else if (button.dataset.action === "down" && index < activitiesCache.length - 1) {
-        [activitiesCache[index + 1], activitiesCache[index]] = [activitiesCache[index], activitiesCache[index + 1]];
-        await reorderActivities(currentUser.uid, activitiesCache.map((a) => a.id));
+      try {
+        if (button.dataset.action === "toggle") {
+          await updateActivity(currentUser.uid, id, { active: !activitiesCache[index].active });
+        } else if (button.dataset.action === "up" && index > 0) {
+          [activitiesCache[index - 1], activitiesCache[index]] = [activitiesCache[index], activitiesCache[index - 1]];
+          await reorderActivities(currentUser.uid, activitiesCache.map((a) => a.id));
+        } else if (button.dataset.action === "down" && index < activitiesCache.length - 1) {
+          [activitiesCache[index + 1], activitiesCache[index]] = [activitiesCache[index], activitiesCache[index + 1]];
+          await reorderActivities(currentUser.uid, activitiesCache.map((a) => a.id));
+        }
+        activitiesCache = await getActivities(currentUser.uid);
+        renderManageScreen();
+      } catch (err) {
+        console.error("failed to update activity", err);
       }
-      activitiesCache = await getActivities(currentUser.uid);
-      renderManageScreen();
     });
   });
 }
@@ -219,16 +234,20 @@ document.getElementById("add-activity-form").addEventListener("submit", async (e
   event.preventDefault();
   const nameInput = document.getElementById("add-activity-name");
   const iconInput = document.getElementById("add-activity-icon");
-  await addActivity(currentUser.uid, {
-    name: nameInput.value,
-    icon: iconInput.value || "⭐",
-    color: "#3d405b",
-    order: activitiesCache.length,
-  });
-  nameInput.value = "";
-  iconInput.value = "";
-  activitiesCache = await getActivities(currentUser.uid);
-  renderManageScreen();
+  try {
+    await addActivity(currentUser.uid, {
+      name: nameInput.value,
+      icon: iconInput.value || "⭐",
+      color: "#3d405b",
+      order: activitiesCache.length,
+    });
+    nameInput.value = "";
+    iconInput.value = "";
+    activitiesCache = await getActivities(currentUser.uid);
+    renderManageScreen();
+  } catch (err) {
+    console.error("failed to add activity", err);
+  }
 });
 
 mainNav.querySelector('[data-screen="manage"]').addEventListener("click", renderManageScreen);
